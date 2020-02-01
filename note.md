@@ -149,9 +149,109 @@ no pb! It's secure by having less stuff!
 Pay attention because alpine does not have bash
 it use ash.
 
+next: simplified source code of the node container
+```dockerfile
+FROM alpine:3.10
+
+# Apk is Alpine package manager
+RUN apk add --update nodejs npm
+
+# create and add the node group
+RUN addgroup -S node && adduser -S node -G node
+
+USER node
+
+RUN mkdir /home/node/code
+WORKDIR /home/node/code
+COPY --chown=node:node package.json ./
+RUN npm install
+
+COPY --chown=node:node ./ ./
+
+CMD ["node", "index.js"]
+```
+
+## Multistage Build
+I can build a container inside a container, or even between 
+different files. In the next one, I well build (dev) install inside 
+the first part with npm, and after that run inside (prod);
+In the second part, I create my own image, to save max space.
+
+look 3-alpine-linux file.
+
+## Static Assets exercise
+the exercise is very easy, just one container to build,
+and after that other to run.
+
+# Bind Mounts
+That for keep data when the container is destroy but that not a snowflakes :
+a snowflakes is a server that I set manually with ssh and if it's crash,
+all the variable are lost, and I need to redo all the work. The idea is to build
+cow, a cow is like all the other cow.
+The other problem is the db, I don't want to lose my db if I destroy my container.
+So we will use different way to mount stuff, keep.
+
+So we use bind Mount to create a portal between a directory and my container,
+each time I change the code on that directory, it's will be update on the 
+container! Like if I want to write Go, and I do not want install go,
+I install it inside a container, and bind the working dir, and compile between
+them!
+
+the next command will bind the ./build directory to the server nginx. That so cool!
+```bash
+docker run --mount type=bind,source="$(pwd)"/build,target=/usr/share/nginx/html -p 8080:80 nginx
+```
+
+## Volumes
+Volumes will be handle by dockers, that not a directory inside my computer.
+Docker will keep and do stuff with it. It's super with DB, cool, I set up
+one time, and that's it! Different containers can read on the same volume,
+like for the log.
+
+```bash
+docker run --env DATA_PATH=/data/num.txt --mount type=volume,src=incrementor-data,target=/data incrementor
+```
+--env DATA_PATH=/data/num.txt : give to my server the right path
+--mount : src='the name of the volume' target='its path'
+```bash
+docker volume list
+```
+
+I also have a temporary file system (tmpfs), where I can put password, apiKey
+
+## Container and dev environment
+```docker run --rm -it --mount type=bind,source=(pwd),target=/src -p 1313:1313 -u hugo jguyomard/hugo-builder:0.55 hugo server -w --bind=0.0.0.0```
+look how do that with jetbrain, because there is certainly a way to do that better.
+
+## Networks & Docker: Mongodb
+`docker network ls` : show all the docker networks
+I can connect 2 containers to let them talk to each other.
+
+```bash
+# create the network
+docker network create --driver=bridge app-net
+# create a mongo db server that is connect to this bridge
+# that container contains drivers
+docker run -d --network=app-net -p 27017:27017 --name=db --rm mongo:3
+# this one, will run mongod database
+docker run -it --network=app-net --rm mongo:3 mongo --host db
+
+# A node container with the node and mongodb dependency: app-with-mongod
+docker run -p 3000:3000 --network=app-net --env MONGO_CONNECTION_STRING=mongodb://db:27017\
+    app-with-mongo
  
+```
+This is very painful, so we will use docker compose.
 
+# Docker compose
+Docker-compose is really used in dev, but less in production
+because, it connects only container on the same host.
+To put that in prod, we will use kubernet.
 
+# Kubernetes
+Kubernetes is hard and need to be use only for production.
+Basically Kubernetes is for handle 100 different containers
+in production. 
 
 
 

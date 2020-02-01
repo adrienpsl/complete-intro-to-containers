@@ -1,0 +1,24 @@
+# rebuild : docker-compose up --build
+# the docker-compose version I use
+version: "3"
+services:
+  # that the same element in the docker command
+  web:
+    build: .
+    ports:
+      - "3000:3000"
+    # that's a bind mount
+    volumes:
+      # it's sugar to $(pwd)/home...
+      - .:/home/node/code
+      # We well treat node_modules alone
+      - /home/node/code/node_modules
+    links:
+      # as it's dependency, it will start first
+      - db
+    environment:
+      MONGO_CONNECTION_STRING: mongodb://db:27017
+  db:
+    # yeah, it will do all the stuff
+    image: mongo:3
+

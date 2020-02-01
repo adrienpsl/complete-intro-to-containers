@@ -19,6 +19,7 @@
     "gatsby-remark-prismjs": "^3.3.4",
     "gatsby-source-filesystem": "^2.1.8",
     "gatsby-transformer-remark": "^2.6.10",
+    "node-sass": "^4.13.1",
     "prismjs": "^1.17.1",
     "react": "^16.8.6",
     "react-dom": "^16.8.6",
@@ -41,7 +42,6 @@
   },
   "devDependencies": {
     "@babel/polyfill": "^7.4.4",
-    "babel-eslint": "^10.0.2",
     "core-js": "^2.6.2",
     "eslint": "^6.1.0",
     "eslint-config-prettier": "^6.0.0",
